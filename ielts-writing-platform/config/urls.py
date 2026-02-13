@@ -6,7 +6,12 @@ from django.http import JsonResponse
 
 
 def health_check(request):
-    """Health check endpoint."""
+    """
+    Return a simple health-check response indicating service status.
+    
+    Returns:
+        JsonResponse: JSON object {"status": "ok"}.
+    """
     return JsonResponse({'status': 'ok'})
 
 

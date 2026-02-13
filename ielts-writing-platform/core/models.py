@@ -31,6 +31,12 @@ class Task(models.Model):
         ]
     
     def __str__(self) -> str:
+        """
+        Return a human-readable label combining the task type display name and the task title.
+        
+        Returns:
+            A string in the format "<task type display>: <title>".
+        """
         return f"{self.get_task_type_display()}: {self.title}"
 
 
@@ -61,6 +67,12 @@ class Attempt(models.Model):
         ]
     
     def __str__(self) -> str:
+        """
+        Return a human-readable label for the Attempt combining its id, the user's username, and the attempt status.
+        
+        Returns:
+            str: A string in the format "Attempt {id} - {username} - {status}".
+        """
         return f"Attempt {self.id} - {self.user.username} - {self.status}"
 
 
@@ -82,6 +94,14 @@ class EvaluationResult(models.Model):
         ordering = ['-created_at']
     
     def __str__(self) -> str:
+        """
+        Return a human-readable label for this evaluation result.
+        
+        Includes the associated Attempt's UUID and the overall band score.
+        
+        Returns:
+            str: A string containing the Attempt id and the overall band (e.g., "Result for Attempt <id> - Band <score>").
+        """
         return f"Result for Attempt {self.attempt.id} - Band {self.overall_band}"
 
 
@@ -108,4 +128,10 @@ class Job(models.Model):
         ]
     
     def __str__(self) -> str:
+        """
+        Produces a human-readable label for the Job instance.
+        
+        Returns:
+            str: The job label formatted as "Job {id} - {type} - {status}" containing the job's id, type, and status.
+        """
         return f"Job {self.id} - {self.type} - {self.status}"

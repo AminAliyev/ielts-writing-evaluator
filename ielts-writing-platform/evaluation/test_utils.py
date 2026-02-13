@@ -102,7 +102,15 @@ def test_count_words_whitespace_variations():
 
 
 def test_clean_essay_text():
-    """Test essay text cleaning."""
+    """
+    Verifies clean_essay_text normalizes and trims essay-style text.
+    
+    Checks that the function:
+    - Collapses runs of consecutive newlines (no occurrences of three or more consecutive newline characters).
+    - Collapses multiple spaces into a single space.
+    - Removes leading indentation at the start of lines.
+    - Trims leading and trailing whitespace from the overall text.
+    """
     # Normalize multiple newlines
     text = "Line 1\n\n\nLine 2"
     result = clean_essay_text(text)

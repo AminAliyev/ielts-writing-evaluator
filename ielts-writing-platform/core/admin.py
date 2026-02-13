@@ -23,6 +23,12 @@ class AttemptAdmin(admin.ModelAdmin):
     raw_id_fields = ['user', 'task']
     
     def has_add_permission(self, request: HttpRequest) -> bool:
+        """
+        Prevent adding new objects via the admin interface.
+        
+        Returns:
+            bool: `False` to disallow creating new objects through the admin.
+        """
         return False
 
 
@@ -34,9 +40,25 @@ class EvaluationResultAdmin(admin.ModelAdmin):
                       'feedback', 'priority_fixes', 'improved_essay', 'raw_response']
     
     def has_add_permission(self, request: HttpRequest) -> bool:
+        """
+        Prevent adding new objects via the admin interface.
+        
+        Returns:
+            bool: `False` to disallow creating new objects through the admin.
+        """
         return False
     
     def has_change_permission(self, request: HttpRequest, obj: Optional[Any] = None) -> bool:
+        """
+        Disallow changing EvaluationResult objects via the admin interface.
+        
+        Parameters:
+            request (HttpRequest): The incoming HTTP request from the admin user.
+            obj (Optional[Any]): The model instance being checked, or `None` when checking general permissions.
+        
+        Returns:
+            bool: `False` always.
+        """
         return False
 
 
@@ -49,4 +71,10 @@ class JobAdmin(admin.ModelAdmin):
     raw_id_fields = ['attempt']
     
     def has_add_permission(self, request: HttpRequest) -> bool:
+        """
+        Prevent adding new objects via the admin interface.
+        
+        Returns:
+            bool: `False` to disallow creating new objects through the admin.
+        """
         return False

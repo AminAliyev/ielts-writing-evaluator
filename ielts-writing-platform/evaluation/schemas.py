@@ -15,7 +15,18 @@ class CriteriaScores(BaseModel):
     @field_validator('task_response', 'coherence_cohesion', 'lexical_resource', 'grammar_accuracy')
     @classmethod
     def validate_half_point(cls, v):
-        """Validate scores are in 0.5 increments."""
+        """
+        Ensure a numeric score is in 0.5 increments.
+        
+        Parameters:
+            v (float): Score value to validate.
+        
+        Returns:
+            float: The original score when it is in 0.5 increments.
+        
+        Raises:
+            ValueError: If `v` is not in 0.5 increments.
+        """
         if (v * 2) % 1 != 0:
             raise ValueError('Score must be in 0.5 increments')
         return v
@@ -42,7 +53,18 @@ class EvaluationSchema(BaseModel):
     @field_validator('overall_band')
     @classmethod
     def validate_overall_band(cls, v):
-        """Validate overall band is in 0.5 increments."""
+        """
+        Ensure the overall band value is a multiple of 0.5.
+        
+        Parameters:
+            v (float): The overall band value to validate.
+        
+        Returns:
+            float: The validated overall band value.
+        
+        Raises:
+            ValueError: If `v` is not in 0.5 increments.
+        """
         if (v * 2) % 1 != 0:
             raise ValueError('Overall band must be in 0.5 increments')
         return v

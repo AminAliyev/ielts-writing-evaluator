@@ -36,13 +36,13 @@ logger = logging.getLogger(__name__)
 # Authentication Views
 
 def signup_view(request: HttpRequest) -> HttpResponse:
-    """User registration page.
+    """
+    Render the user signup page and handle new user registrations.
     
-    Args:
-        request: The HTTP request object.
-        
+    On POST, validates the submitted form; if valid, creates the user, logs them in, and redirects to the writing list. On GET, renders an empty signup form.
+    
     Returns:
-        Rendered signup template or redirect to writing list.
+        HttpResponse: A rendered signup page or a redirect response to the writing list.
     """
     if request.user.is_authenticated:
         return redirect('writing_list')
@@ -61,13 +61,13 @@ def signup_view(request: HttpRequest) -> HttpResponse:
 
 
 def login_view(request: HttpRequest) -> HttpResponse:
-    """User login page.
+    """
+    Render the login page and authenticate users.
     
-    Args:
-        request: The HTTP request object.
-        
+    Processes POST submissions using LoginForm; on successful authentication logs the user in and redirects to the `next` URL (or writing list). On GET or invalid form submission, renders the login template with the form.
+    
     Returns:
-        Rendered login template or redirect to writing list.
+        HttpResponse: A redirect after successful login or the rendered login page when showing the form or after failed validation.
     """
     if request.user.is_authenticated:
         return redirect('writing_list')
@@ -88,13 +88,11 @@ def login_view(request: HttpRequest) -> HttpResponse:
 
 @require_POST
 def logout_view(request: HttpRequest) -> HttpResponse:
-    """User logout.
+    """
+    Log out the current user and redirect to the login page.
     
-    Args:
-        request: The HTTP request object.
-        
     Returns:
-        Redirect to login page.
+        HttpResponse: Redirect response to the login page.
     """
     username = request.user.username
     logout(request)
@@ -119,14 +117,15 @@ def writing_list_view(request: HttpRequest) -> HttpResponse:
 
 @login_required
 def writing_editor_view(request: HttpRequest, task_id: str) -> HttpResponse:
-    """Writing editor page.
+    """
+    Render the writing editor page for the given active task and include the user's most recent draft if present.
     
-    Args:
-        request: The HTTP request object.
-        task_id: UUID of the task.
-        
+    Parameters:
+        request (HttpRequest): The incoming HTTP request; must be from an authenticated user.
+        task_id (str): UUID of the active Task to open.
+    
     Returns:
-        Rendered writing editor template.
+        HttpResponse: The rendered writing editor page with context keys `task` (Task) and `draft` (Attempt or `None`).
     """
     task = get_object_or_404(Task, id=task_id, is_active=True)
     
@@ -145,14 +144,15 @@ def writing_editor_view(request: HttpRequest, task_id: str) -> HttpResponse:
 
 @login_required
 def processing_view(request: HttpRequest, attempt_id: str) -> HttpResponse:
-    """Processing status page.
+    """
+    Render the processing status page for a user's attempt.
     
-    Args:
-        request: The HTTP request object.
-        attempt_id: UUID of the attempt.
-        
+    Parameters:
+        request (HttpRequest): The incoming HTTP request; user must be authenticated.
+        attempt_id (str): UUID of the Attempt belonging to the current user.
+    
     Returns:
-        Rendered processing status template.
+        HttpResponse: Rendered processing status page for the specified attempt.
     """
     attempt = get_object_or_404(Attempt, id=attempt_id, user=request.user)
     
@@ -164,14 +164,17 @@ def processing_view(request: HttpRequest, attempt_id: str) -> HttpResponse:
 
 @login_required
 def result_view(request: HttpRequest, attempt_id: str) -> HttpResponse:
-    """Evaluation result page.
+    """
+    Render the evaluation result page for a completed attempt.
     
-    Args:
-        request: The HTTP request object.
-        attempt_id: UUID of the attempt.
-        
+    Fetches the attempt belonging to the current user by `attempt_id`. If the attempt's status is DONE, renders the result template with the attempt and its result in the context; if the attempt is not DONE, redirects to the processing page. Raises Http404 if the attempt does not exist or does not belong to the user.
+    
+    Parameters:
+        request (HttpRequest): The incoming HTTP request.
+        attempt_id (str): UUID of the attempt to display.
+    
     Returns:
-        Rendered result template or redirect to processing page.
+        HttpResponse: The rendered result page response, or an HttpResponse redirecting to the processing page.
     """
     attempt = get_object_or_404(
         Attempt.objects.select_related('task', 'result'),
@@ -191,13 +194,11 @@ def result_view(request: HttpRequest, attempt_id: str) -> HttpResponse:
 
 @login_required
 def history_view(request: HttpRequest) -> HttpResponse:
-    """User's submission history.
+    """
+    Render the user's submission history page.
     
-    Args:
-        request: The HTTP request object.
-        
     Returns:
-        Rendered history template.
+        HttpResponse: The rendered history page response.
     """
     return render(request, 'history.html')
 
@@ -207,13 +208,21 @@ def history_view(request: HttpRequest) -> HttpResponse:
 @login_required
 @require_http_methods(["GET"])
 def api_tasks_list(request: HttpRequest) -> JsonResponse:
-    """List tasks, optionally filtered by type.
+    """
+    List active tasks, optionally filtered by task type.
     
-    Args:
-        request: The HTTP request object. Can include 'task_type' query parameter.
-        
+    Parameters:
+        request (HttpRequest): The incoming request. May include the query parameter `task_type`
+            to limit results to tasks of that type.
+    
     Returns:
-        JSON response with list of tasks.
+        JsonResponse: JSON object with a `tasks` list where each item contains:
+            - `id` (str): Task UUID as a string.
+            - `task_type` (str): The task's type.
+            - `title` (str): Task title.
+            - `prompt` (str): Task prompt text.
+            - `min_words` (int): Minimum required word count for the task.
+            - `suggested_time` (int): Suggested completion time in minutes.
     """
     task_type = request.GET.get('task_type')
     
@@ -272,13 +281,14 @@ def api_task_detail(request: HttpRequest, task_id: str) -> JsonResponse:
 @login_required
 @require_http_methods(["GET"])
 def api_random_task(request: HttpRequest) -> JsonResponse:
-    """Get random task by type.
+    """
+    Retrieve a random active Task, optionally filtered by the 'task_type' query parameter.
     
-    Args:
-        request: The HTTP request object. Can include 'task_type' query parameter.
-        
+    Parameters:
+    	request (HttpRequest): Django request; may include 'task_type' in GET to limit selection.
+    
     Returns:
-        JSON response with random task or 404 error.
+    	JsonResponse: On success, JSON with task fields `id`, `task_type`, `title`, `prompt`, `min_words`, and `suggested_time`. If no matching task exists, returns an API error response indicating a TaskNotFoundError.
     """
     task_type = request.GET.get('task_type')
     
@@ -307,16 +317,20 @@ def api_random_task(request: HttpRequest) -> JsonResponse:
 @login_required
 @require_POST
 def api_save_draft(request: HttpRequest) -> JsonResponse:
-    """Save essay draft.
+    """
+    Save or update the requesting user's draft essay for a specified task.
     
-    Args:
-        request: The HTTP request object with JSON body containing:
-            - task_id (str): UUID of the task
-            - essay_text (str): The essay text
-            - is_random (bool, optional): Whether task was randomly selected
-        
+    Expects the HttpRequest body to be JSON with the fields:
+    - task_id (str): UUID of the active task
+    - essay_text (str, optional): Draft essay text (defaults to empty string)
+    - is_random (bool, optional): Whether the task was randomly selected
+    
+    Parameters:
+        request (HttpRequest): Request whose body contains the JSON payload described above.
+    
     Returns:
-        JSON response with draft id and word count, or error message.
+        JsonResponse: On success, a JSON object with `id` (draft Attempt UUID as string) and `word_count` (int).
+        On failure, an API error response describing the problem.
     """
     try:
         try:
@@ -371,16 +385,19 @@ def api_save_draft(request: HttpRequest) -> JsonResponse:
 @login_required
 @require_POST
 def api_submit_attempt(request: HttpRequest) -> JsonResponse:
-    """Submit essay for evaluation.
+    """
+    Submit an essay for evaluation and queue a background job if accepted.
     
-    Args:
-        request: The HTTP request object with JSON body containing:
-            - task_id (str): UUID of the task
-            - essay_text (str): The essay text
-            - is_random (bool, optional): Whether task was randomly selected
-        
+    Parameters:
+        request (HttpRequest): HTTP request whose JSON body must include:
+            - task_id (str): UUID of the active task.
+            - essay_text (str): The essay content.
+            - is_random (bool, optional): Whether the task was randomly selected.
+    
     Returns:
-        JSON response with attempt id and status, or error message.
+        dict: JSON object with keys:
+            - `id` (str): Attempt UUID.
+            - `status` (str): Attempt status. When an existing recent queued/processing attempt is reused this returns that attempt's id and status; when a new attempt is created the response contains the new attempt's id and status (created responses use HTTP 201).
     """
     try:
         try:
@@ -460,14 +477,17 @@ def api_submit_attempt(request: HttpRequest) -> JsonResponse:
 @login_required
 @require_http_methods(["GET"])
 def api_attempt_status(request: HttpRequest, attempt_id: str) -> JsonResponse:
-    """Get attempt status for polling.
+    """
+    Provide the current status of a user's attempt for polling.
     
-    Args:
-        request: The HTTP request object.
-        attempt_id: UUID of the attempt.
-        
+    The response includes `status` and `error_message`. If the attempt is done, the response also includes `redirect_url` pointing to the attempt's result page; if the attempt failed, `redirect_url` is `null`.
+    
+    Parameters:
+        request (HttpRequest): The HTTP request from the authenticated user.
+        attempt_id (str): UUID of the attempt to check.
+    
     Returns:
-        JSON response with attempt status and optional redirect URL.
+        JsonResponse: JSON object with `status`, `error_message`, and optionally `redirect_url`.
     """
     try:
         try:
@@ -493,14 +513,28 @@ def api_attempt_status(request: HttpRequest, attempt_id: str) -> JsonResponse:
 @login_required
 @require_http_methods(["GET"])
 def api_attempt_detail(request: HttpRequest, attempt_id: str) -> JsonResponse:
-    """Get attempt details with result.
+    """
+    Retrieve detailed information for the authenticated user's attempt, including its task and evaluation result when available.
     
-    Args:
-        request: The HTTP request object.
-        attempt_id: UUID of the attempt.
-        
+    Parameters:
+        request (HttpRequest): Django request object for the authenticated user.
+        attempt_id (str): UUID string identifying the Attempt to retrieve.
+    
     Returns:
-        JSON response with attempt and result details.
+        JsonResponse: A success response containing an object with:
+            - id: Attempt UUID string.
+            - task: Object with `id`, `title`, and `task_type`.
+            - status: Attempt status string.
+            - essay_text: Submitted essay text.
+            - word_count: Integer word count of the essay.
+            - submitted_at: ISO 8601 timestamp string or `null`.
+            - error_message: Error message string or `null`.
+            - result (optional): Present when `status` is DONE and a result exists; object with:
+                - overall_band: Overall band value.
+                - criteria_scores: Criteria score breakdown.
+                - feedback: Feedback text or structure.
+                - priority_fixes: Priority fixes suggested.
+                - improved_essay: Improved essay text (if available).
     """
     try:
         try:
@@ -543,13 +577,25 @@ def api_attempt_detail(request: HttpRequest, attempt_id: str) -> JsonResponse:
 @login_required
 @require_http_methods(["GET"])
 def api_attempts_list(request: HttpRequest) -> JsonResponse:
-    """List user's attempts with pagination.
+    """
+    Return a paginated list of the current user's attempts.
     
-    Args:
-        request: The HTTP request object. Can include 'page' query parameter.
-        
+    Parameters:
+        request (HttpRequest): Django request; may include a 'page' query parameter (1-based).
+    
     Returns:
-        JSON response with paginated list of attempts.
+        JsonResponse: JSON object with:
+            - attempts (list): Each item contains:
+                - id (str): Attempt UUID as a string.
+                - task (dict): { 'title': str, 'task_type': str }.
+                - status (str): Attempt status.
+                - word_count (int): Word count of the submission.
+                - submitted_at (str|None): ISO 8601 timestamp of submission or `None`.
+                - overall_band (number|None): Result overall band if available, otherwise `None`.
+            - page (int): Current page number.
+            - total_pages (int): Total number of pages.
+            - has_next (bool): True if a next page exists.
+            - has_previous (bool): True if a previous page exists.
     """
     attempts = Attempt.objects.filter(
         user=request.user,
@@ -585,14 +631,18 @@ def api_attempts_list(request: HttpRequest) -> JsonResponse:
 @login_required
 @require_POST
 def api_retry_attempt(request: HttpRequest, attempt_id: str) -> JsonResponse:
-    """Retry a failed attempt.
+    """
+    Queue a failed attempt for re-evaluation by creating a new pending job.
     
-    Args:
-        request: The HTTP request object.
-        attempt_id: UUID of the attempt.
-        
+    Parameters:
+        attempt_id (str): UUID of the attempt to retry.
+    
     Returns:
-        JSON response with attempt id and status, or error message.
+        dict: JSON object containing the retried attempt's `id` and `status`.
+    
+    Raises:
+        AttemptNotFoundError: If no attempt with the given id exists for the current user.
+        InvalidStatusTransitionError: If the attempt is not in the FAILED status.
     """
     try:
         try:

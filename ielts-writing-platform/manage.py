@@ -3,6 +3,11 @@ import os
 import sys
 
 def main():
+    """
+    Configure the Django settings module and invoke Django's command-line utility.
+    
+    Sets the `DJANGO_SETTINGS_MODULE` environment variable to `config.settings` if not already set, imports and calls Django's management entry point to process command-line arguments. Raises an `ImportError` with a clear message if Django cannot be imported.
+    """
     os.environ.setdefault('DJANGO_SETTINGS_MODULE', 'config.settings')
     try:
         from django.core.management import execute_from_command_line

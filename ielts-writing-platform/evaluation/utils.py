@@ -5,21 +5,16 @@ from typing import List
 
 
 def count_words(text: str) -> int:
-    """Count words in text using IELTS-compliant word counting rules.
+    """
+    Count words in text using IELTS-compliant rules.
     
-    Word counting rules:
-    - Contractions count as one word (don't, it's, I've)
-    - Hyphenated words count as one word (well-known, twenty-one)
-    - Numbers count as one word (123, 3.14)
-    - Abbreviations count as one word (etc., Dr., e.g.)
-    - Possessives count as one word (student's, teacher's)
-    - Only alphanumeric sequences separated by whitespace/punctuation count
+    Counts tokens where contractions, hyphenated words, numbers, abbreviations, and possessives are each treated as a single word (e.g., don't, well-known, 3.14, Dr., student's).
     
-    Args:
-        text: Input text to count words from.
-        
+    Parameters:
+        text (str): Input text to count.
+    
     Returns:
-        Number of words in the text.
+        int: Number of words found.
     """
     # Remove extra whitespace and normalize
     text = text.strip()
@@ -47,13 +42,14 @@ def count_words(text: str) -> int:
 
 
 def clean_essay_text(text: str) -> str:
-    """Clean essay text for processing.
+    """
+    Normalize and clean essay text by collapsing excessive whitespace and trimming edges.
     
-    Args:
-        text: Raw essay text.
-        
+    Parameters:
+        text (str): Raw essay text to normalize.
+    
     Returns:
-        Cleaned essay text with normalized whitespace.
+        str: Cleaned essay text with condensed spaces/tabs, normalized newlines (maximum two consecutive), removed indentation after newlines, and trimmed leading/trailing whitespace.
     """
     # Normalize whitespace
     text = re.sub(r'\n\s*\n', '\n\n', text)  # Normalize multiple newlines
