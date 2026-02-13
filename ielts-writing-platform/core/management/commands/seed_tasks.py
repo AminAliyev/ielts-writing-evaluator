@@ -12,11 +12,10 @@ class Command(BaseCommand):
     help: str = 'Seed database with initial IELTS writing tasks'
     
     def handle(self, *args: Any, **options: Any) -> None:
-        """Execute command.
+        """
+        Seed the database with a predefined set of initial IELTS writing tasks.
         
-        Args:
-            *args: Variable length argument list.
-            **options: Arbitrary keyword arguments.
+        Creates or ensures existence of tasks (each with task_type, title, prompt, min_words, and suggested_time) using the task title as the unique lookup; writes success or warning messages for each task and prints a summary count of newly created tasks and total tasks in the database.
         """
         tasks_data: List[Dict[str, Any]] = [
             {

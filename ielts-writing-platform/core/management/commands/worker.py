@@ -25,17 +25,20 @@ class Command(BaseCommand):
     help: str = 'Run background worker for processing evaluation jobs'
     
     def __init__(self) -> None:
-        """Initialize worker."""
+        """
+        Initialize the worker command.
+        
+        Sets an internal shutdown flag to False and creates a unique `worker_id` combining the host name and the instance id.
+        """
         super().__init__()
         self.shutdown: bool = False
         self.worker_id: str = f"{socket.gethostname()}-{id(self)}"
     
     def handle(self, *args: Any, **options: Any) -> None:
-        """Execute worker loop.
+        """
+        Run the worker's main loop to claim and process evaluation jobs until a shutdown signal is received.
         
-        Args:
-            *args: Variable length argument list.
-            **options: Arbitrary keyword arguments.
+        Registers SIGINT and SIGTERM handlers, logs worker start and shutdown, repeatedly attempts to claim a pending job and process it, sleeps briefly when no job is available, and logs unexpected errors before retrying.
         """
         signal.signal(signal.SIGINT, self.handle_shutdown)
         signal.signal(signal.SIGTERM, self.handle_shutdown)
@@ -56,20 +59,24 @@ class Command(BaseCommand):
         logger.info(f"Worker {self.worker_id} shutting down gracefully")
     
     def handle_shutdown(self, signum: int, frame: Any) -> None:
-        """Handle shutdown signals.
+        """
+        Set the command's shutdown flag and log receipt of a termination signal.
         
-        Args:
-            signum: Signal number.
-            frame: Current stack frame.
+        Parameters:
+            signum (int): Signal number received.
+            frame (Any): Current stack frame provided to the signal handler.
         """
         logger.info(f"Received shutdown signal {signum}")
         self.shutdown = True
     
     def claim_job(self) -> Optional[Job]:
-        """Claim next available job.
+        """
+        Atomically claim the next pending job that is due and mark it as running.
+        
+        Searches for the oldest job with status Pending and run_after <= now; if found, marks it RUNNING, records lock metadata and increments its attempt count, then returns that Job instance. If no job is available or an error occurs, returns None.
         
         Returns:
-            Next pending job or None if no jobs available.
+            Optional[Job]: The claimed Job instance, or `None` if no job was claimed.
         """
         try:
             with transaction.atomic():
@@ -93,10 +100,13 @@ class Command(BaseCommand):
         return None
     
     def process_job(self, job: Job) -> None:
-        """Process a job.
+        """
+        Process the given evaluation job: run the evaluation, persist results, and update attempt and job statuses.
         
-        Args:
-            job: The Job instance to process.
+        This updates the associated Attempt to PROCESSING, invokes the evaluation provider, validates (and attempts to repair) the returned evaluation data, creates an EvaluationResult, and marks the Attempt and Job DONE on success. On error, logs the failure; if the error is considered transient and the job has remaining retries (fewer than 2 attempts), reschedules the Job with a backoff and records the error; otherwise marks the Attempt and Job as FAILED and records the error message.
+        
+        Parameters:
+            job (Job): The Job instance to process; its related Attempt is updated and an EvaluationResult may be created.
         """
         attempt = job.attempt
         
@@ -170,13 +180,13 @@ class Command(BaseCommand):
                 logger.error(f"Job {job.id} marked as FAILED")
     
     def is_transient_error(self, error: Exception) -> bool:
-        """Check if error is transient and should be retried.
+        """
+        Determine whether an exception represents a transient, likely retryable error.
         
-        Args:
-            error: The exception that occurred.
-            
+        Inspects the exception message for common transient indicators like "timeout", "connection", "network", "temporary", "rate limit", or "quota".
+        
         Returns:
-            True if error is transient, False otherwise.
+            True if the error message contains any transient keyword, False otherwise.
         """
         error_str: str = str(error).lower()
         transient_keywords: list[str] = [
@@ -190,13 +200,14 @@ class Command(BaseCommand):
         return any(keyword in error_str for keyword in transient_keywords)
     
     def repair_evaluation(self, result: dict[str, Any]) -> dict[str, Any]:
-        """Attempt to repair invalid evaluation result.
+        """
+        Repair an evaluation result dictionary to ensure required keys and value shapes are present.
         
-        Args:
-            result: The evaluation result dictionary to repair.
-            
+        Parameters:
+            result (dict[str, Any]): Evaluation result that may be missing keys or contain malformed values.
+        
         Returns:
-            Repaired evaluation result dictionary.
+            dict[str, Any]: The repaired evaluation result dictionary; guaranteed to contain `overall_band`, a `criteria_scores` mapping with keys `task_response`, `coherence_cohesion`, `lexical_resource`, `grammar_accuracy`, a `feedback` mapping where each value is a list, and a `priority_fixes` list (length between 3 and 5).
         """
         if 'overall_band' not in result:
             result['overall_band'] = 5.0

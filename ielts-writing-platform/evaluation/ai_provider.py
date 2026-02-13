@@ -9,19 +9,22 @@ logger = logging.getLogger(__name__)
 
 
 def evaluate_writing(task_prompt: str, essay_text: str) -> Dict[str, Any]:
-    """Evaluate writing using configured AI provider.
+    """
+    Evaluate an IELTS writing response using the configured AI provider.
     
-    Args:
-        task_prompt: The IELTS writing task prompt.
-        essay_text: The student's essay text to evaluate.
-        
+    Selects provider from the AI_PROVIDER environment variable and uses AI_API_KEY for authentication. If AI_API_KEY is missing or empty, or if the provider is unrecognized, a deterministic mock evaluation is returned.
+    
+    Parameters:
+        task_prompt (str): The IELTS writing task prompt to evaluate against.
+        essay_text (str): The student's essay text to be evaluated.
+    
     Returns:
-        Dictionary containing evaluation results with keys:
-        - overall_band (float)
-        - criteria_scores (dict)
-        - feedback (dict)
-        - priority_fixes (list)
-        - improved_essay (optional str)
+        dict: Evaluation result with keys:
+            - overall_band (float): Overall band score.
+            - criteria_scores (dict): Per-criterion numeric scores.
+            - feedback (dict): Lists of feedback points per criterion.
+            - priority_fixes (list): Ordered list of recommended fixes.
+            - improved_essay (str | None): Optionally provided revised essay text.
     """
     provider: str = os.getenv('AI_PROVIDER', 'gemini').lower()
     api_key: str = os.getenv('AI_API_KEY', '').strip()
@@ -38,18 +41,38 @@ def evaluate_writing(task_prompt: str, essay_text: str) -> Dict[str, Any]:
 
 
 def evaluate_with_gemini(task_prompt: str, essay_text: str, api_key: str) -> Dict[str, Any]:
-    """Evaluate using Google Gemini API.
+    """
+    Evaluate an essay using Google Gemini and return a structured IELTS Writing evaluation.
     
-    Args:
-        task_prompt: The IELTS writing task prompt.
-        essay_text: The student's essay text.
-        api_key: Google API key for Gemini.
-        
+    This function sends the provided task prompt and essay to Gemini with instructions to return a strict JSON object describing band scores, per-criterion feedback, priority fixes, and an optional improved essay, then parses and returns that JSON as a Python dictionary.
+    
+    Parameters:
+        task_prompt (str): The IELTS writing task prompt to evaluate against.
+        essay_text (str): The student's essay text to be evaluated.
+        api_key (str): Google API key used to configure the Gemini client.
+    
     Returns:
-        Dictionary containing structured evaluation results.
-        
+        dict: A dictionary matching the expected evaluation schema:
+            {
+              "overall_band": float,
+              "criteria_scores": {
+                "task_response": float,
+                "coherence_cohesion": float,
+                "lexical_resource": float,
+                "grammar_accuracy": float
+              },
+              "feedback": {
+                "task_response": [str, ...],
+                "coherence_cohesion": [str, ...],
+                "lexical_resource": [str, ...],
+                "grammar_accuracy": [str, ...]
+              },
+              "priority_fixes": [str, ...],
+              "improved_essay": str | None
+            }
+    
     Raises:
-        Exception: If API call fails or response parsing fails.
+        Exception: If the Gemini API call fails or the response cannot be parsed as the expected JSON.
     """
     try:
         import google.generativeai as genai
@@ -122,13 +145,19 @@ Evaluate this essay and return the JSON evaluation."""
 
 
 def get_mock_evaluation(essay_text: str) -> Dict[str, Any]:
-    """Return deterministic mock evaluation for testing without API key.
+    """
+    Produce a deterministic mock IELTS writing evaluation derived from the essay's word count.
     
-    Args:
-        essay_text: The student's essay text.
-        
+    Parameters:
+        essay_text (str): The student's essay text used to compute word count and derive scores.
+    
     Returns:
-        Dictionary containing mock evaluation data based on word count.
+        Dict[str, Any]: Mock evaluation containing:
+            - overall_band: numeric band score inferred from word count.
+            - criteria_scores: per-criterion numeric scores (task_response, coherence_cohesion, lexical_resource, grammar_accuracy).
+            - feedback: lists of brief feedback points for each criterion.
+            - priority_fixes: list of high-priority improvement suggestions.
+            - improved_essay: None (placeholder for optional rewritten essay).
     """
     word_count: int = len(essay_text.split())
     

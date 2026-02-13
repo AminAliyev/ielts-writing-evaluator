@@ -11,10 +11,12 @@ class TaskType(str, Enum):
     
     @classmethod
     def choices(cls):
-        """Return choices for Django model field.
+        """
+        Provide Django model field choices for IELTS task types.
         
         Returns:
-            List of (value, label) tuples.
+            list[tuple[str, str]]: List of (value, label) tuples:
+                ('IELTS_T1', 'IELTS Task 1') and ('IELTS_T2', 'IELTS Task 2').
         """
         return [
             (cls.TASK_1.value, 'IELTS Task 1'),
@@ -33,10 +35,11 @@ class AttemptStatus(str, Enum):
     
     @classmethod
     def choices(cls):
-        """Return choices for Django model field.
+        """
+        Provide Django-compatible (value, label) choices for the enum.
         
         Returns:
-            List of (value, label) tuples.
+            list[tuple[str, str]]: List of (value, label) tuples where each value is the enum member's string value and each label is the human-readable name for use in Django model/field choices.
         """
         return [
             (cls.DRAFT.value, 'Draft'),
@@ -57,10 +60,11 @@ class JobStatus(str, Enum):
     
     @classmethod
     def choices(cls):
-        """Return choices for Django model field.
+        """
+        Return Django model field choices for this JobStatus enum.
         
         Returns:
-            List of (value, label) tuples.
+            List[tuple[str, str]]: List of (value, label) tuples, where `value` is the enum member's string value and `label` is the human-readable name (e.g., `('PENDING', 'Pending')`).
         """
         return [
             (cls.PENDING.value, 'Pending'),
@@ -77,10 +81,11 @@ class JobType(str, Enum):
     
     @classmethod
     def choices(cls):
-        """Return choices for Django model field.
+        """
+        Provide a list of choices suitable for Django model fields for this JobType enum.
         
         Returns:
-            List of (value, label) tuples.
+            list: A list of (value, label) tuples where `value` is the enum value and `label` is the human-readable name.
         """
         return [
             (cls.EVALUATE_WRITING.value, 'Evaluate Writing'),
