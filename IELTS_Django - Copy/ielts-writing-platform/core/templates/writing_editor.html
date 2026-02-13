@@ -1,0 +1,26 @@
+{% extends "base.html" %}
+{% block title %}{{ task.title }} - IELTS Writing{% endblock %}
+{% block content %}
+<div class="max-w-5xl mx-auto px-4 py-8">
+    <div class="bg-white border p-6 mb-6">
+        <h1 class="text-2xl font-bold">{{ task.title }}</h1>
+        <p class="mt-4 whitespace-pre-wrap">{{ task.prompt }}</p>
+        <p class="mt-4 text-sm text-gray-600">Min: {{ task.min_words }} words | Time: {{ task.suggested_time }} min</p>
+    </div>
+    <div class="bg-white border p-6">
+        <div class="mb-4">Word count: <span id="wc">0</span> / {{ task.min_words }}</div>
+        <textarea id="editor" class="w-full h-96 border p-4 rounded" placeholder="Start writing...">{% if draft %}{{ draft.essay_text }}{% endif %}</textarea>
+        <div class="mt-6 flex gap-4">
+            <button onclick="submit()" class="bg-blue-600 text-white px-6 py-3 rounded hover:bg-blue-700">Submit</button>
+            <button onclick="save()" class="bg-gray-200 text-gray-700 px-6 py-3 rounded">Save Draft</button>
+        </div>
+    </div>
+</div>
+<script>
+const ed=document.getElementById('editor'),wc=document.getElementById('wc');
+ed.oninput=()=>{wc.textContent=ed.value.trim().split(/\s+/).filter(w=>w).length;setTimeout(()=>save(1),2000)};
+ed.oninput();
+function save(auto){fetch('/api/attempts/draft/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{csrf_token}}'},body:JSON.stringify({task_id:'{{task.id}}',essay_text:ed.value})}).then(r=>r.json())}
+function submit(){fetch('/api/attempts/submit/',{method:'POST',headers:{'Content-Type':'application/json','X-CSRFToken':'{{csrf_token}}'},body:JSON.stringify({task_id:'{{task.id}}',essay_text:ed.value})}).then(r=>r.json()).then(d=>d.error?alert(d.error):window.location.href='/attempts/'+d.id+'/processing')}
+</script>
+{% endblock %}

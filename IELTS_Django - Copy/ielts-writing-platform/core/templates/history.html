@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block title %}History - IELTS Writing{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 py-8">
+    <h1 class="text-3xl font-bold mb-8">Your Submission History</h1>
+    <div id="history"></div>
+</div>
+<script>
+fetch('/api/attempts/').then(r=>r.json()).then(d=>{document.getElementById('history').innerHTML=d.attempts.length?d.attempts.map(a=>`<div class="bg-white border p-6 mb-4"><div class="flex justify-between items-center"><div><h3 class="font-semibold">${a.task.title}</h3><p class="text-sm text-gray-600">${a.status} - ${a.word_count} words</p></div><div>${a.overall_band?'<div class="text-2xl font-bold text-blue-600">'+a.overall_band+'</div>':''}</div><a href="/attempts/${a.id}/${a.status=='DONE'?'result':'processing'}" class="text-blue-600">View</a></div></div>`).join(''):'<p class="text-center text-gray-600">No submissions yet</p>'});
+</script>
+{% endblock %}

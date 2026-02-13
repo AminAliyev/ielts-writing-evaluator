@@ -1,0 +1,21 @@
+{% extends "base.html" %}
+{% block title %}Practice - IELTS Writing{% endblock %}
+{% block content %}
+<div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+    <h1 class="text-3xl font-bold text-gray-900 mb-8">IELTS Writing Practice</h1>
+    <div class="mb-8 flex gap-4">
+        <button onclick="getRandomTask('IELTS_T1')" class="bg-blue-600 text-white px-6 py-3 rounded-lg hover:bg-blue-700">
+            Random Task 1
+        </button>
+        <button onclick="getRandomTask('IELTS_T2')" class="bg-green-600 text-white px-6 py-3 rounded-lg hover:bg-green-700">
+            Random Task 2
+        </button>
+    </div>
+    <div id="task-list"></div>
+</div>
+<script>
+function loadTasks(type='IELTS_T1'){fetch('/api/tasks/?task_type='+type).then(r=>r.json()).then(d=>{document.getElementById('task-list').innerHTML=d.tasks.map(t=>`<div class="bg-white border p-6 rounded-lg mb-4"><h3 class="font-semibold">${t.title}</h3><p class="text-gray-600 my-2">${t.prompt.substr(0,150)}...</p><a href="/writing/${t.id}" class="bg-blue-600 text-white px-4 py-2 rounded">Start Writing</a></div>`).join('')})}
+function getRandomTask(type){fetch('/api/tasks/random/?task_type='+type).then(r=>r.json()).then(d=>window.location.href='/writing/'+d.id)}
+loadTasks();
+</script>
+{% endblock %}
