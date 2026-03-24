@@ -1,0 +1,25 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: naqqash-ingress
+  namespace: naqqash-tea
+  annotations:
+    cert-manager.io/cluster-issuer: letsencrypt-prod
+spec:
+  ingressClassName: nginx
+  tls:
+    - hosts: [naqqashtea.com, api.naqqashtea.com]
+      secretName: naqqash-tls
+  rules:
+    - host: naqqashtea.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: naqqash-frontend, port: { number: 80 } } }
+    - host: api.naqqashtea.com
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend: { service: { name: naqqash-api, port: { number: 8000 } } }

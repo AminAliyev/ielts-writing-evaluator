@@ -1,0 +1,18 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: naqqash-frontend
+  namespace: naqqash-tea
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: naqqash-frontend } }
+  template:
+    metadata: { labels: { app: naqqash-frontend } }
+    spec:
+      containers:
+        - name: frontend
+          image: naqqash/frontend:latest
+          ports: [{ containerPort: 80 }]
+          resources:
+            requests: { memory: "128Mi", cpu: "100m" }
+            limits: { memory: "256Mi", cpu: "300m" }

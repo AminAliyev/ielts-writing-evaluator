@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: naqqash-api
+  namespace: naqqash-tea
+spec:
+  replicas: 2
+  selector: { matchLabels: { app: naqqash-api } }
+  template:
+    metadata: { labels: { app: naqqash-api } }
+    spec:
+      containers:
+        - name: api
+          image: naqqash/api:latest
+          ports: [{ containerPort: 8000 }]
+          envFrom:
+            - secretRef: { name: naqqash-secrets }
+            - configMapRef: { name: naqqash-config }
+          resources:
+            requests: { memory: "256Mi", cpu: "250m" }
+            limits: { memory: "256Mi", cpu: "500m" }
+          livenessProbe: { httpGet: { path: /api/products/categories/, port: 8000 }, initialDelaySeconds: 20 }
+          readinessProbe: { httpGet: { path: /api/products/categories/, port: 8000 }, initialDelaySeconds: 10 }
