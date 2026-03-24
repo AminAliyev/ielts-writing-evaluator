@@ -1,0 +1,16 @@
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: naqqash-db-migration
+  namespace: naqqash-tea
+spec:
+  template:
+    spec:
+      restartPolicy: Never
+      containers:
+        - name: migration
+          image: naqqash/api:latest
+          command: ["sh", "-c", "python manage.py migrate && python manage.py seed_teas"]
+          envFrom:
+            - secretRef: { name: naqqash-secrets }
+            - configMapRef: { name: naqqash-config }

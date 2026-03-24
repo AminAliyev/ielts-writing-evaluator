@@ -1,0 +1,10 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: naqqash-api
+  namespace: naqqash-tea
+spec:
+  selector: { app: naqqash-api }
+  ports:
+    - port: 8000
+      targetPort: 8000
